@@ -43,7 +43,7 @@
 
         .divider {
             margin: 20px auto;
-            width: 40%;
+            width: 30%;
             height: 1px;
             background-color: #183059;
         }
@@ -87,7 +87,7 @@
 <!-- 오늘 날짜 -->
 <div id="current-date"></div>
 <div class="date-labels">
-    Year &nbsp;&nbsp;&nbsp;&nbsp; Month &nbsp;&nbsp;&nbsp;&nbsp; Day
+    Year &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Month &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Day
 </div>
 
 <script>
@@ -100,7 +100,7 @@
     const todayDay = String(today.getDate()).padStart(2, '0');
 
     // 날짜 표시
-    document.getElementById("current-date").innerHTML = `${todayYear}    ${todayMonth}    ${todayDay}`;
+    document.getElementById("current-date").innerHTML = `${todayYear}         ${todayMonth}         ${todayDay}`;
 
     // countdown
     let timer = setInterval(function () {
