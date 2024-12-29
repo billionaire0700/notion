@@ -6,132 +6,138 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Montserrat:900">
     <title>Document</title>
     <style>
-        
-:root {
-  color-scheme: light dark;
-}
-        
-body{
-    background-color: light-dark(white, #191919);
-}
-  
-#timer {
-  color: #eeeeee;
-  text-align: center;
-  text-transform: uppercase;
-  font-family: 'Lato', sans-serif;
-  font-size: .7em;
-  letter-spacing: 5px;
-}
+        :root {
+            color-scheme: light dark;
+        }
 
-.days, .hours, .minutes, .seconds {
-  display: inline-block;
-  padding: 20px;
-  width: 100px;
-  border-radius: 5px;
-}
+        body {
+            background-color: light-dark(white, #191919);
+        }
 
-.days {
-  color: #183059;
-}
+        #timer {
+            color: #eeeeee;
+            text-align: center;
+            text-transform: uppercase;
+            font-family: 'Lato', sans-serif;
+            font-size: .7em;
+            letter-spacing: 5px;
+        }
 
-.hours {
-  color: #183059;
-}
+        .days, .hours, .minutes, .seconds {
+            display: inline-block;
+            padding: 20px;
+            width: 100px;
+            border-radius: 5px;
+        }
 
-.minutes {
-  color: #183059;
-}
+        .days {
+            color: #183059;
+        }
 
-.seconds {
-  color: #183059;
-}
+        .hours {
+            color: #183059;
+        }
 
-.numbers {
-  font-family: 'Montserrat', sans-serif;
-  color:  #183059;
-  font-size: 4em;
-  text-align: center;
-}
+        .minutes {
+            color: #183059;
+        }
 
-.white {
-  position: absolute;
-  background:  #eeeeee;
-  height: 85px;
-  width: 75px;
-  left: 30%;
-  top: 2%;
-}
+        .seconds {
+            color: #183059;
+        }
 
-.red {
-  position: absolute;
-  background:  #EF2F3C;
-  left: 18%;
-  top: 9%;
-  height: 65px;
-  width: 70px;
- 
-}
+        .numbers {
+            font-family: 'Montserrat', sans-serif;
+            color: #183059;
+            font-size: 4em;
+            text-align: center;
+        }
 
-.blue {
-  position: absolute;
-  background:  #276FBF;
-  height: 80px;
-  width: 80px;
-  left: 60%;
-  top: 5%;
+        #current-date {
+            margin-top: 20px;
+            font-family: 'Lato', sans-serif;
+            font-size: 1.2em;
+            color: #eeeeee;
+        }
 
+        .white {
+            position: absolute;
+            background: #eeeeee;
+            height: 85px;
+            width: 75px;
+            left: 30%;
+            top: 2%;
+        }
 
-}
+        .red {
+            position: absolute;
+            background: #EF2F3C;
+            left: 18%;
+            top: 9%;
+            height: 65px;
+            width: 70px;
+        }
 
-
+        .blue {
+            position: absolute;
+            background: #276FBF;
+            height: 80px;
+            width: 80px;
+            left: 60%;
+            top: 5%;
+        }
     </style>
 </head>
 <body>
     
 <div id="timer">
-
     <div class="days"> 
         <div id="days" class="numbers "> </div>days</div> 
-      <div class="hours"> 
-        <div  id="hours" class="numbers"> </div>hours</div> 
-      <div class="minutes"> 
-        <div  id="minutes" class="numbers"> </div>minutes</div> 
-      <div   class="seconds"> 
+    <div class="hours"> 
+        <div id="hours" class="numbers"> </div>hours</div> 
+    <div class="minutes"> 
+        <div id="minutes" class="numbers"> </div>minutes</div> 
+    <div class="seconds"> 
         <div id="seconds" class="numbers"> </div>seconds</div> 
-      </div>
-
 </div>
 
-</body>
+<!-- 오늘 날짜 표시 -->
+<div id="current-date"></div>
+
 <script>
     const year = new Date().getFullYear();
-const myDate = new Date('Dec 31, 2025 00:00:00');
-console.log(myDate);
+    const myDate = new Date('Dec 31, 2025 00:00:00');
+    console.log(myDate);
 
-// countdown
-let timer = setInterval(function() {
+    // 오늘 날짜 계산 및 표시
+    const today = new Date();
+    const todayYear = today.getFullYear();
+    const todayMonth = String(today.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
+    const todayDay = String(today.getDate()).padStart(2, '0');
 
-  // get today's date
-  const today = new Date().getTime();
+    document.getElementById("current-date").innerHTML = `오늘 기준: ${todayYear} / ${todayMonth} / ${todayDay}`;
 
-  // get the difference
-  const diff = myDate - today;
+    // countdown
+    let timer = setInterval(function() {
+        // get today's date
+        const now = new Date().getTime();
 
-  // math
-  let days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  let hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  let minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  let seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        // get the difference
+        const diff = myDate - now;
 
-  // display
-  document.getElementById("days").innerHTML=days
-  document.getElementById("hours").innerHTML=hours
-  document.getElementById("minutes").innerHTML=minutes
-  document.getElementById("seconds").innerHTML=seconds
+        // math
+        let days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        let hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        let minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-
-
-}, 1);
+        // display
+        document.getElementById("days").innerHTML = days;
+        document.getElementById("hours").innerHTML = hours;
+        document.getElementById("minutes").innerHTML = minutes;
+        document.getElementById("seconds").innerHTML = seconds;
+    }, 1000);
 </script>
+
+</body>
 </html>
