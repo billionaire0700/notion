@@ -43,14 +43,14 @@
 
         .divider {
             margin: 20px auto;
-            width: 60%;
+            width: 40%;
             height: 1px;
             background-color: #183059;
         }
 
         #current-date {
             text-transform: uppercase;
-            font-size: 4em;
+            font-size: 3em;
             color: #183059;
             font-family: 'Montserrat', sans-serif;
         }
@@ -100,7 +100,7 @@
     const todayDay = String(today.getDate()).padStart(2, '0');
 
     // 날짜 표시
-    document.getElementById("current-date").innerHTML = `${todayYear} / ${todayMonth} / ${todayDay}`;
+    document.getElementById("current-date").innerHTML = `${todayYear}    ${todayMonth}    ${todayDay}`;
 
     // countdown
     let timer = setInterval(function () {
