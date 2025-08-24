@@ -8,15 +8,18 @@
   <style>
     :root { color-scheme: light dark; }
     body {
-      background-color: light-dark(white, #191919);
+      background: #ffffff;
       text-align: center;
       font-family: 'Lato', sans-serif;
       margin: 0;
     }
+    @media (prefers-color-scheme: dark) {
+      body { background: #191919; }
+    }
 
-    /* 타이머: 구조 미변경 */
+    /* 타이머: 구조 미변경, 가독성 색상 조정 */
     #timer {
-      color: #eeeeee;
+      color: #183059;       /* 라벨도 보이도록 진하게 */
       text-transform: uppercase;
       font-size: 0.7em;
       letter-spacing: 5px;
@@ -54,17 +57,16 @@
       white-space: pre;
     }
 
-    /* 진행률 표시가 포함된 divider */
+    /* 진행률 포함 divider */
     .divider {
       --p: 0; /* 0~100 */
       position: relative;
       height: 2px;
-      width: clamp(80px, 12vw, 200px); /* 기본 반응형 */
+      width: clamp(80px, 12vw, 200px);
       background: #18305933;
       flex-shrink: 0;
       border-radius: 2px;
     }
-    /* 더 세밀한 반응형 단계 */
     @media (min-width: 640px) { .divider { width: clamp(120px, 14vw, 260px); } }
     @media (min-width: 1024px){ .divider { width: clamp(160px, 12vw, 320px); } }
     @media (min-width: 1440px){ .divider { width: clamp(200px, 10vw, 420px); } }
@@ -102,6 +104,7 @@
       .numbers { font-size: 3em; }
       .date-text { font-size: 1em; letter-spacing: 3px; }
       .divider .pct { top: -16px; font-size: 0.65em; }
+      .divider { width: clamp(60px, 20vw, 160px); }
     }
   </style>
 </head>
@@ -125,4 +128,72 @@
   <!-- 왼쪽 오늘 날짜 · 진행률 divider · 오른쪽 목표 날짜 -->
   <div class="date-divider">
     <span id="today" class="date-text" aria-label="오늘 날짜"></span>
-    <div class="divider" id="div
+    <div class="divider" id="divider" role="separator" aria-label="목표 진행률">
+      <div class="fill" id="progressFill"></div>
+      <div class="thumb" id="progressThumb"></div>
+      <div class="pct" id="progressPct" aria-live="polite"></div>
+    </div>
+    <span class="date-text" aria-label="목표 날짜">2030 01 01</span>
+  </div>
+
+  <script>
+    // 안전한 ISO 8601 형식 사용
+    const goalDate  = new Date('2030-01-01T00:00:00'); // 목표일
+    const startDate = new Date('2025-01-01T00:00:00'); // 진행률 기준 시작일
+
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function formatYMD(d){ return `${d.getFullYear()} ${pad(d.getMonth()+1)} ${pad(d.getDate())}`; }
+    function clamp(v,min,max){ return Math.min(Math.max(v,min),max); }
+
+    // 오늘 날짜 표시
+    const todayEl = document.getElementById('today');
+    function updateToday() {
+      const today = new Date();
+      todayEl.textContent = formatYMD(today);
+    }
+
+    // 진행률 업데이트
+    const dividerEl = document.getElementById('divider');
+    const pctEl = document.getElementById('progressPct');
+    function updateProgress(now = new Date()) {
+      const total = goalDate.getTime() - startDate.getTime();
+      const elapsed = clamp(now.getTime() - startDate.getTime(), 0, total);
+      const p = total > 0 ? (elapsed / total) * 100 : 100;
+      const pFixed = Math.round(p * 10) / 10;
+      dividerEl.style.setProperty('--p', pFixed);
+      pctEl.textContent = `${pFixed}%`;
+      dividerEl.setAttribute('aria-valuemin','0');
+      dividerEl.setAttribute('aria-valuemax','100');
+      dividerEl.setAttribute('aria-valuenow', String(pFixed));
+    }
+
+    // 카운트다운 업데이트
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diff = goalDate.getTime() - now;
+
+      const d = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+      const h = Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+      const m = Math.max(0, Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)));
+      const s = Math.max(0, Math.floor((diff % (1000 * 60)) / 1000));
+
+      document.getElementById('days').textContent = d;
+      document.getElementById('hours').textContent = h;
+      document.getElementById('minutes').textContent = m;
+      document.getElementById('seconds').textContent = s;
+
+      updateProgress(new Date(now));
+      if (diff <= 0) {
+        clearInterval(interval);
+        updateProgress(goalDate);
+      }
+    }, 1000);
+
+    // 초기 렌더
+    updateToday();
+    updateProgress();
+  </script>
+
+  <noscript>자바스크립트를 활성화하세요.</noscript>
+</body>
+</html>
