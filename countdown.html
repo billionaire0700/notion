@@ -10,30 +10,34 @@
     body { margin:0; font-family:'Lato',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#fff; text-align:center; }
     @media (prefers-color-scheme: dark){ body{ background:#191919; } }
 
+    /* 타이머 영역: 구조 유지 */
     #timer{ color:#183059; text-transform:uppercase; font-size:.7em; letter-spacing:5px; margin-top:24px; }
     .days,.hours,.minutes,.seconds{ display:inline-block; padding:20px; width:100px; border-radius:5px; color:#183059; }
     .numbers{ font-family:'Montserrat',Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif; color:#183059; font-size:4em; line-height:1; }
 
+    /* 시작일 · 진행률 · 목표일 */
     .date-divider{ display:flex; align-items:center; justify-content:center; gap:12px; margin:24px auto 8px; width:min(92%,980px); }
     .date-text{ font-family:'Montserrat',sans-serif; letter-spacing:5px; text-transform:uppercase; color:#183059; font-size:1.2em; white-space:pre; }
 
+    /* 진행률 바 + 지표 */
     .divider{ --p:0; position:relative; height:2px; width:clamp(80px,12vw,200px); background:#18305933; border-radius:2px; flex-shrink:0; }
     @media (min-width:640px){ .divider{ width:clamp(120px,14vw,260px);} }
     @media (min-width:1024px){ .divider{ width:clamp(160px,12vw,320px);} }
     @media (min-width:1440px){ .divider{ width:clamp(200px,10vw,420px);} }
+
     .divider .fill{ position:absolute; inset:0 auto 0 0; width:calc(var(--p)*1%); background:#183059; border-radius:2px; }
     .divider .thumb{ position:absolute; left:calc(var(--p)*1%); top:50%; transform:translate(-50%,-50%); width:10px; height:10px; border-radius:50%; background:#183059; box-shadow:0 0 0 4px #1830591a; }
-    .divider .pct{ position:absolute; left:calc(var(--p)*1%); top:-18px; transform:translateX(-50%); font-size:.7em; letter-spacing:1px; color:#183059; }
 
-    .today-block{ display:inline-block; padding:12px 20px 0; color:#183059; text-transform:uppercase; letter-spacing:5px; margin-bottom:24px; }
-    .today-number{ font-family:'Montserrat',sans-serif; font-size:4em; line-height:1; color:#183059; }
-    .today-label{ display:block; margin-top:10px; font-size:.7em; }
+    /* 퍼센트와 오늘날짜(퍼센트 아래) */
+    .divider .pct{ position:absolute; left:calc(var(--p)*1%); top:-24px; transform:translateX(-50%); font-size:.7em; letter-spacing:1px; color:#183059; }
+    .divider .pct-date{ position:absolute; left:calc(var(--p)*1%); top:-8px; transform:translateX(-50%); font-size:.6em; letter-spacing:1px; color:#183059a0; }
 
     @media (max-width:520px){
-      .numbers,.today-number{ font-size:3em; }
+      .numbers{ font-size:3em; }
       .date-text{ font-size:1em; letter-spacing:3px; }
-      .divider .pct{ top:-16px; font-size:.65em; }
       .divider{ width:clamp(60px,20vw,160px); }
+      .divider .pct{ top:-20px; font-size:.65em; }
+      .divider .pct-date{ top:-6px; font-size:.58em; }
     }
   </style>
 </head>
@@ -49,14 +53,12 @@
   <div class="date-divider">
     <span id="start" class="date-text" aria-label="시작 날짜">2025 01 01</span>
     <div class="divider" id="divider" role="separator" aria-label="목표 진행률">
-      <div class="fill"></div><div class="thumb"></div><div class="pct" id="progressPct">0%</div>
+      <div class="fill"></div>
+      <div class="thumb"></div>
+      <div class="pct" id="progressPct">0%</div>
+      <div class="pct-date" id="progressDate">0000 00 00</div>
     </div>
     <span class="date-text" aria-label="목표 날짜">2030 01 01</span>
-  </div>
-
-  <div class="today-block" aria-label="오늘">
-    <div id="todayBig" class="today-number">0000 00 00</div>
-    <span class="today-label">TODAY</span>
   </div>
 
   <script>
@@ -68,16 +70,15 @@
       h: document.getElementById('hours'),
       m: document.getElementById('minutes'),
       s: document.getElementById('seconds'),
-      todayBig: document.getElementById('todayBig'),
       pct: document.getElementById('progressPct'),
-      divider: document.getElementById('divider')
+      date: document.getElementById('progressDate'),
+      divider: document.getElementById('divider'),
+      start: document.getElementById('start')
     };
 
     const pad = n => String(n).padStart(2,'0');
     const fmt = d => `${d.getFullYear()} ${pad(d.getMonth()+1)} ${pad(d.getDate())}`;
     const clamp = (v,min,max) => Math.min(Math.max(v,min),max);
-
-    function renderToday() { el.todayBig.textContent = fmt(new Date()); }
 
     function renderProgress(now = new Date()){
       const total = goalDate - startDate;
@@ -86,7 +87,7 @@
       const p1 = Math.round(p*10)/10;
       el.divider.style.setProperty('--p', p1);
       el.pct.textContent = `${p1}%`;
-      el.divider.setAttribute('aria-valuenow', String(p1));
+      el.date.textContent = fmt(now);
     }
 
     function renderCountdown(){
@@ -96,18 +97,19 @@
       const hours = Math.max(0, Math.floor((diff % 86400000) / 3600000));
       const minutes = Math.max(0, Math.floor((diff % 3600000) / 60000));
       const seconds = Math.max(0, Math.floor((diff % 60000) / 1000));
-      el.d.textContent = days; el.h.textContent = hours; el.m.textContent = minutes; el.s.textContent = seconds;
+      el.d.textContent = days;
+      el.h.textContent = hours;
+      el.m.textContent = minutes;
+      el.s.textContent = seconds;
       renderProgress(new Date(now));
     }
 
-    // 초기 1회 즉시 렌더
-    document.getElementById('start').textContent = fmt(startDate);
-    renderToday(); renderCountdown();
-
-    // 이후 1초마다 업데이트
-    setInterval(() => { renderToday(); renderCountdown(); }, 1000);
+    // 초기 렌더
+    el.start.textContent = fmt(startDate);
+    renderCountdown();
+    // 1초 업데이트
+    setInterval(renderCountdown, 1000);
   </script>
 
-  <noscript>자바스크립트를 켜야 내용이 보인다.</noscript>
 </body>
 </html>
