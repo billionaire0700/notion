@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vision Dashboard · Prototype</title>
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --panel: #111318;
+      --card: #151923;
+      --muted: #8a93a0;
+      --text: #e7ecf3;
+      --brand: #4f82ff;
+      --ok: #18c29c;
+      --warn: #f2b01d;
+      --danger: #ff5470;
+      --ring: #2b3344;
+      --shadow: 0 6px 20px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: radial-gradient(1200px 700px at 80% -10%, #182032 0%, #0b0c10 60%) no-repeat var(--bg);
+      color: var(--text); font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      letter-spacing: .2px;
+    }
+    .wrap { max-width: 1280px; margin: 28px auto; padding: 0 20px 60px; }
+    .grid { display: grid; gap: 16px; }
+    .panel { background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border: 1px solid rgba(255,255,255,.06); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .pad { padding: 18px 18px; }
+    .muted { color: var(--muted); }
+    .h { font-weight: 700; }
+    .h-xl { font-size: 28px; letter-spacing: .4px; }
+    .h-lg { font-size: 18px; }
+    .h-md { font-size: 16px; }
+    .small { font-size: 12px; }
+    .row { display: flex; gap: 12px; align-items: center; }
+    .space { flex: 1 1 auto; }
+    .tag { padding: 4px 8px; border-radius: 999px; background: #1b2232; color: var(--muted); border: 1px solid rgba(255,255,255,.06); }
+
+    /* Top layout */
+    .top { grid-template-columns: 2.2fr 1.1fr 1.2fr; }
+    .vision { display: grid; row-gap: 8px; }
+    .vision .h-xl { margin: 2px 0 0; }
+
+    .dday { display: grid; place-items: center; text-align: center; gap: 10px; }
+    .dday .nums { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+    .dday .cell { background: #101522; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 10px 8px; }
+    .dday .n { font-weight: 700; font-size: 20px; }
+
+    .ring-box { display: grid; place-items: center; }
+    .ring {
+      --p: 0.0; /* 0..1 */
+      width: 140px; height: 140px; border-radius: 50%;
+      background:
+        conic-gradient(var(--brand) calc(var(--p) * 360deg), rgba(255,255,255,.08) 0deg);
+      display: grid; place-items: center; box-shadow: var(--shadow);
+    }
+    .ring::after {
+      content: attr(data-label);
+      width: 110px; height: 110px; border-radius: 50%;
+      background: #0e1421; border: 1px solid rgba(255,255,255,.08);
+      display: grid; place-items: center; font-weight: 700; font-size: 22px; color: var(--text);
+    }
+    .ring-sub { margin-top: 6px; color: var(--muted); font-size: 12px; }
+
+    /* KPI */
+    .kpi { grid-template-columns: repeat(4, 1fr); }
+    .k-card { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+    .k-head { display: flex; align-items: baseline; gap: 8px; }
+    .k-target { color: var(--muted); font-size: 12px; }
+    .bar { height: 8px; background: #0f1524; border-radius: 999px; border: 1px solid rgba(255,255,255,.06); overflow: hidden; }
+    .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--brand), #6ea6ff); }
+    .delta { font-size: 12px; }
+
+    /* Milestones */
+    .mid { grid-template-columns: 1.8fr 1.2fr; }
+    .m-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .m-card { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 12px; display: grid; gap: 10px; }
+    .m-top { display: flex; align-items: center; gap: 10px; }
+    .badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; border: 1px solid rgba(255,255,255,.08); }
+    .b-ok { background: rgba(24,194,156,.12); color: var(--ok); }
+    .b-warn { background: rgba(242,176,29,.12); color: var(--warn); }
+    .b-danger { background: rgba(255,84,112,.12); color: var(--danger); }
+    .m-footer { display: flex; align-items: center; gap: 10px; }
+
+    /* Roadmap */
+    .road { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 14px; }
+    .tree { list-style: none; padding-left: 0; margin: 0; }
+    .tree li { position: relative; padding-left: 18px; margin: 8px 0; }
+    .tree li::before { content: ""; position: absolute; left: 6px; top: 0.65em; width: 8px; height: 8px; border-radius: 2px; background: #32405c; box-shadow: 0 0 0 2px #182032 inset; }
+    .tree ul { list-style: none; margin: 6px 0 0 12px; padding: 0 0 0 10px; border-left: 1px dashed #32405c; }
+
+    /* Today + Calendar */
+    .bottom { grid-template-columns: 1.4fr 1fr; }
+    .todo { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 14px; }
+    .t-item { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 8px; border-radius: 10px; }
+    .t-item:not(:last-child) { border-bottom: 1px dashed #263148; }
+    .chk { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #3a4866; display: grid; place-items: center; }
+    .chk input { appearance: none; width: 100%; height: 100%; margin: 0; }
+
+    .cal { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 14px; }
+    .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+    .day { background:#0f1524; border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 8px; min-height: 80px; display: grid; grid-template-rows: auto 1fr; }
+    .day h4 { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
+    .slot { font-size: 11px; padding: 4px 6px; border-radius: 8px; margin: 2px 0; background: #17203a; border: 1px solid rgba(255,255,255,.06); }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .top { grid-template-columns: 1fr; }
+      .mid { grid-template-columns: 1fr; }
+      .bottom { grid-template-columns: 1fr; }
+      .kpi { grid-template-columns: repeat(2, 1fr); }
+      .m-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 650px) {
+      .kpi { grid-template-columns: 1fr; }
+      .m-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Edit toggle */
+    details.config { background: #0f1524; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 10px 12px; }
+    details.config summary { cursor: pointer; color: var(--muted); }
+    textarea#cfg { width: 100%; min-height: 220px; margin-top: 10px; background: #0b1120; color: #dfe8ff; border: 1px solid #233055; border-radius: 10px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; }
+    .btn { background: #1a2440; border: 1px solid #334471; color: #cfe0ff; padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+    .btn:active { transform: translateY(1px); }
+  </style>
+</head>
+<body>
+  <div class="wrap grid" id="app">
+
+    <!-- ===== Top: Vision · D-Day · Progress Ring ===== -->
+    <section class="grid top">
+      <div class="panel pad vision">
+        <div class="tag">VISION</div>
+        <div class="h h-xl" id="visionText"></div>
+        <div class="row muted small">
+          <div>목표일 <span id="targetDateTxt"></span></div>
+          <div class="tag">우선순위: 장기</div>
+          <div class="tag" id="moneyNeed"></div>
+        </div>
+        <details class="config">
+          <summary>설정 편집(JSON) · 저장하면 즉시 반영</summary>
+          <textarea id="cfg"></textarea>
+          <div style="margin-top:10px" class="row">
+            <button class="btn" id="saveCfg">저장</button>
+            <div class="muted small">백업을 권장</div>
+          </div>
+        </details>
+      </div>
+
+      <div class="panel pad dday">
+        <div class="h h-lg">D‑Day</div>
+        <div class="nums">
+          <div class="cell"><div class="n" id="dDays">0</div><div class="small muted">DAYS</div></div>
+          <div class="cell"><div class="n" id="dHours">0</div><div class="small muted">HOURS</div></div>
+          <div class="cell"><div class="n" id="dMinutes">0</div><div class="small muted">MIN</div></div>
+          <div class="cell"><div class="n" id="dSeconds">0</div><div class="small muted">SEC</div></div>
+        </div>
+        <div class="small muted" id="todayTxt"></div>
+      </div>
+
+      <div class="panel pad ring-box">
+        <div class="h h-lg" style="margin-bottom:6px">전체 달성률</div>
+        <div class="ring" id="ring" data-label="0%"></div>
+        <div class="ring-sub" id="ringSub">마일스톤 가중 평균</div>
+      </div>
+    </section>
+
+    <!-- ===== KPI ===== -->
+    <section class="panel pad grid kpi" id="kpiWrap">
+      <!-- dynamic -->
+    </section>
+
+    <!-- ===== Mid: Milestones + Roadmap ===== -->
+    <section class="grid mid">
+      <div class="panel pad">
+        <div class="row">
+          <div class="h h-lg">마일스톤</div>
+          <div class="space"></div>
+          <span class="muted small" id="msCount"></span>
+        </div>
+        <div class="m-grid" id="mGrid"></div>
+      </div>
+      <div class="road">
+        <div class="h h-lg" style="margin-bottom:8px">로드맵</div>
+        <ul class="tree" id="road"></ul>
+      </div>
+    </section>
+
+    <!-- ===== Bottom: Today + Weekly ===== -->
+    <section class="grid bottom">
+      <div class="todo" id="todo">
+        <div class="row">
+          <div class="h h-lg">Today</div>
+          <div class="space"></div>
+          <div class="muted small" id="todayLink"></div>
+        </div>
+        <div id="todoList"></div>
+      </div>
+      <div class="cal">
+        <div class="row"><div class="h h-lg">Weekly</div><div class="space"></div><span class="muted small" id="weekOf"></span></div>
+        <div class="week" id="week"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // ===== Config =====
+    const CONFIG = {
+      vision: "2030년 아크로 서울포레스트 333.68㎡ 입주",
+      targetDate: "2030-01-01T00:00:00+09:00",
+      currency: "KRW",
+      // KPI
+      kpis: [
+        { key: "revenue", name: "매출", unit: "억원", type: "up", target: 300, current: 0.5 },
+        { key: "run", name: "러닝 속도", unit: "km/h", type: "up", target: 11, current: 6.6 },
+        { key: "bodyfat", name: "체지방률", unit: "%", type: "down", target: 15, current: 22 },
+        { key: "saving", name: "저축률", unit: "%", type: "up", target: 50, current: 18 }
+      ],
+      // Milestones
+      milestones: [
+        { id: "m1", title: "아반떼 MD 구매", due: "2026-02-01", progress: 12, risk: "warn", weight: 1,
+          plan: ["예산 500만 확보", "유지비 계산", "후보 3대 비교", "계약·인도"] },
+        { id: "m2", title: "11km/h 달성", due: "2026-06-30", progress: Math.round(100 * 6.6/11), risk: "ok", weight: 2,
+          plan: ["주 4회 Z2 50분", "월간 5% 볼륨 증가", "분기별 5km 타임트라이얼", "부상 예방 루틴"] },
+        { id: "m3", title: "연애 & 결혼", due: "2027-06-30", progress: 5, risk: "warn", weight: 1,
+          plan: ["월 2회 신규 모임", "주 1회 취미 일정", "분기별 여행 계획"] },
+        { id: "m4", title: "매출 300억 달성", due: "2028-11-01", progress: 1, risk: "danger", weight: 3,
+          plan: ["상품 포트폴리오 5종", "광고 ROAS 300%", "풀필먼트 자동화", "월 매출 5억→10억→20억 스케일"] },
+        { id: "m5", title: "아크로 서울포레스트 매수", due: "2030-01-01", progress: 0, risk: "warn", weight: 3,
+          plan: ["자기자본 30억", "DSR 내 대출 플랜", "잔금 및 입주"] }
+      ],
+      // Weekly schedule templates
+      week: {
+        Mon: ["AM Zone2 50'", "PM 하체"],
+        Tue: ["브랜딩 콘텐츠 1개"],
+        Wed: ["AM Zone2 50'", "PM 상체"],
+        Thu: ["상품 리스팅 10건"],
+        Fri: ["AM Zone2 50'", "PM 코어"],
+        Sat: ["데이트/네트워킹"],
+        Sun: ["휴식·점검"]
+      },
+      // Quick cash need note (optional)
+      needNote: "목표 자금: 자기자본 30억",
+    };
+
+    // ===== State & Helpers =====
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => [...document.querySelectorAll(q)];
+
+    function pct(val, min=0, max=100){ return Math.max(0, Math.min(100, ((val-min)/(max-min))*100)); }
+    function fmt(n){ return new Intl.NumberFormat('ko-KR').format(n); }
+
+    function computeOverallProgress(){
+      const totalW = CONFIG.milestones.reduce((a,m)=>a+(m.weight||1),0);
+      const sum = CONFIG.milestones.reduce((a,m)=>a + (m.progress||0) * (m.weight||1), 0);
+      return totalW ? Math.round(sum/totalW) : 0;
+    }
+
+    function kpiProgress(k){
+      if(k.type === 'up') return Math.round(pct(k.current, 0, k.target));
+      if(k.type === 'down') return Math.round(pct(k.target, k.current, k.target));
+      return 0;
+    }
+
+    // ===== Renderers =====
+    function renderTop(){
+      $('#visionText').textContent = CONFIG.vision;
+      $('#targetDateTxt').textContent = new Date(CONFIG.targetDate).toISOString().slice(0,10);
+      $('#moneyNeed').textContent = CONFIG.needNote || '';
+
+      const p = computeOverallProgress();
+      const ring = $('#ring');
+      ring.style.setProperty('--p', (p/100).toFixed(3));
+      ring.setAttribute('data-label', p + '%');
+      $('#ringSub').textContent = '가중 평균 · ' + CONFIG.milestones.length + '개 항목';
+
+      // Config editor
+      $('#cfg').value = JSON.stringify(CONFIG, null, 2);
+      $('#saveCfg').onclick = () => {
+        try{
+          const next = JSON.parse($('#cfg').value);
+          Object.keys(CONFIG).forEach(k=>delete CONFIG[k]);
+          Object.assign(CONFIG, next);
+          init();
+        }catch(e){ alert('JSON 에러: ' + e.message); }
+      };
+    }
+
+    function renderDday(){
+      const target = new Date(CONFIG.targetDate).getTime();
+      function tick(){
+        const now = Date.now();
+        let diff = Math.max(0, target - now);
+        const days = Math.floor(diff / 86400000); diff -= days*86400000;
+        const hours = Math.floor(diff / 3600000); diff -= hours*3600000;
+        const mins = Math.floor(diff / 60000); diff -= mins*60000;
+        const secs = Math.floor(diff / 1000);
+        $('#dDays').textContent = days;
+        $('#dHours').textContent = hours;
+        $('#dMinutes').textContent = mins;
+        $('#dSeconds').textContent = secs;
+        const t = new Date();
+        $('#todayTxt').textContent = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    function renderKPIs(){
+      const wrap = $('#kpiWrap');
+      wrap.innerHTML = '';
+      CONFIG.kpis.forEach(k => {
+        const p = kpiProgress(k);
+        const delta = (k.type==='up') ? (k.target - k.current) : (k.current - k.target);
+        const ok = (k.type==='up') ? (k.current >= k.target) : (k.current <= k.target);
+        const card = document.createElement('div');
+        card.className = 'k-card';
+        card.innerHTML = `
+          <div class="k-head"><div class="h h-md">${k.name}</div><span class="k-target">목표 ${k.target}${k.unit}</span><div class="space"></div><span class="small ${ok?'':'muted'}">현재 ${k.current}${k.unit}</span></div>
+          <div class="bar"><i style="width:${p}%"></i></div>
+          <div class="row"><span class="muted small">진행률 ${p}%</span><div class="space"></div><span class="delta small">잔여 ${Math.max(0,delta).toFixed( k.unit==='억원'?1:0)}${k.unit}</span></div>
+        `;
+        wrap.appendChild(card);
+      });
+    }
+
+    function riskBadge(r){
+      if(r==='ok') return '<span class="badge b-ok">정상</span>';
+      if(r==='warn') return '<span class="badge b-warn">주의</span>';
+      return '<span class="badge b-danger">위험</span>';
+    }
+
+    function renderMilestones(){
+      $('#msCount').textContent = `${CONFIG.milestones.length}개`;
+      const grid = $('#mGrid');
+      grid.innerHTML = '';
+      CONFIG.milestones.forEach(m => {
+        const el = document.createElement('div');
+        el.className = 'm-card';
+        el.innerHTML = `
+          <div class="m-top">
+            <div class="h h-md">${m.title}</div>
+            <div class="space"></div>
+            ${riskBadge(m.risk)}
+          </div>
+          <div class="muted small">목표일 ${m.due}</div>
+          <div class="bar"><i style="width:${Math.min(100, Math.max(0, m.progress))}%"></i></div>
+          <div class="m-footer small muted">진행률 ${m.progress}% · 가중치 ${m.weight||1}</div>
+          ${m.plan?.length?`<ul class="small muted" style="margin:0 0 4px 14px; line-height:1.7">${m.plan.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}
+        `;
+        grid.appendChild(el);
+      });
+    }
+
+    function renderRoadmap(){
+      const ul = $('#road');
+      ul.innerHTML = '';
+      CONFIG.milestones.forEach(m => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="h h-md">${m.title}</span> ${riskBadge(m.risk)} <span class="muted small">· ${m.due}</span>`;
+        if(m.plan && m.plan.length){
+          const sub = document.createElement('ul');
+          sub.innerHTML = m.plan.map(p=>`<li>${p}</li>`).join('');
+          li.appendChild(sub);
+        }
+        ul.appendChild(li);
+      });
+    }
+
+    function renderToday(){
+      const list = $('#todoList');
+      list.innerHTML = '';
+      const tasks = [];
+      // Simple rule-based generation
+      CONFIG.kpis.forEach(k => {
+        if(k.key==='run') tasks.push({ tag:'러닝', txt:`Zone2 50분 · 현재 ${k.current}${k.unit} → 목표 ${k.target}${k.unit}`, ms:'11km/h 달성' });
+        if(k.key==='revenue') tasks.push({ tag:'세일즈', txt:`제품 리스팅 10건 또는 광고 캠페인 점검`, ms:'매출 300억' });
+        if(k.key==='saving') tasks.push({ tag:'재무', txt:`지출 기록 5분 · 저축률 목표 ${k.target}%`, ms:'재무관리' });
+      });
+      CONFIG.milestones.forEach(m => {
+        if(m.risk==='danger') tasks.push({ tag:'리스크', txt:`${m.title} 리스크 점검 미팅 15분`, ms:m.title });
+      });
+
+      tasks.slice(0,6).forEach(t => {
+        const el = document.createElement('div');
+        el.className = 't-item';
+        el.innerHTML = `
+          <label class="chk"><input type="checkbox"></label>
+          <div>
+            <div class="h h-md">${t.tag}</div>
+            <div class="muted small">${t.txt}</div>
+          </div>
+          <span class="tag">${t.ms}</span>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    function renderWeek(){
+      const week = $('#week');
+      const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const start = new Date();
+      const day = start.getDay(); // 0..6, Sun=0
+      const monday = new Date(start);
+      const diff = (day === 0 ? -6 : 1 - day);
+      monday.setDate(start.getDate() + diff);
+      $('#weekOf').textContent = `${monday.getFullYear()}-${String(monday.getMonth()+1).padStart(2,'0')}-${String(monday.getDate()).padStart(2,'0')}`;
+      week.innerHTML = '';
+      days.forEach((d,i)=>{
+        const date = new Date(monday); date.setDate(monday.getDate()+i);
+        const box = document.createElement('div');
+        box.className = 'day';
+        box.innerHTML = `<h4>${['월','화','수','목','금','토','일'][i]} ${String(date.getMonth()+1)}/${String(date.getDate())}</h4>`;
+        (CONFIG.week[d]||[]).forEach(s=>{
+          const slot = document.createElement('div');
+          slot.className = 'slot';
+          slot.textContent = s;
+          box.appendChild(slot);
+        });
+        week.appendChild(box);
+      });
+    }
+
+    function init(){
+      renderTop();
+      renderDday();
+      renderKPIs();
+      renderMilestones();
+      renderRoadmap();
+      renderToday();
+      renderWeek();
+    }
+
+    init();
+  </script>
+</body>
+</html>
