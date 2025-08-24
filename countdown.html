@@ -13,11 +13,9 @@
       font-family: 'Lato', sans-serif;
       margin: 0;
     }
-    @media (prefers-color-scheme: dark) {
-      body { background: #191919; }
-    }
+    @media (prefers-color-scheme: dark) { body { background: #191919; } }
 
-    /* 타이머 스타일 */
+    /* #timer 구조는 그대로 */
     #timer {
       color: #183059;
       text-transform: uppercase;
@@ -37,6 +35,7 @@
       color: #183059;
       font-size: 4em;
       text-align: center;
+      line-height: 1;
     }
 
     /* 날짜 + 진행률 구분선 */
@@ -72,142 +71,41 @@
     @media (min-width: 1440px){ .divider { width: clamp(200px, 10vw, 420px); } }
 
     .divider .fill {
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: calc(var(--p) * 1%);
-      background: #183059;
-      border-radius: 2px;
-      pointer-events: none;
+      position: absolute; inset: 0 auto 0 0;
+      width: calc(var(--p) * 1%); background: #183059; border-radius: 2px;
     }
     .divider .thumb {
-      position: absolute;
-      left: calc(var(--p) * 1%);
-      top: 50%;
+      position: absolute; left: calc(var(--p) * 1%); top: 50%;
       transform: translate(-50%, -50%);
-      width: 10px; height: 10px; border-radius: 50%;
-      background: #183059;
+      width: 10px; height: 10px; border-radius: 50%; background: #183059;
       box-shadow: 0 0 0 4px #1830591a;
-      pointer-events: none;
     }
     .divider .pct {
-      position: absolute;
-      left: calc(var(--p) * 1%);
-      top: -18px;
-      transform: translateX(-50%);
-      font-size: 0.7em;
-      letter-spacing: 1px;
-      color: #183059;
-      pointer-events: none;
+      position: absolute; left: calc(var(--p) * 1%); top: -18px; transform: translateX(-50%);
+      font-size: 0.7em; letter-spacing: 1px; color: #183059;
     }
 
-    /* 오늘 날짜 표시 */
-    .today-label {
-      margin-top: 10px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 1.6em;
+    /* TODAY 블록: 타이머 블록과 동일 스타일 */
+    .today-block {
+      display: inline-block;
+      padding: 12px 20px 0;
       color: #183059;
-      letter-spacing: 3px;
+      text-transform: uppercase;
+      letter-spacing: 5px;
+      margin-bottom: 24px;
     }
-    .today-label span {
+    .today-block .today-number {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 4em;
+      line-height: 1;
+      color: #183059;
+    }
+    .today-block .today-label {
       display: block;
-      font-size: 0.5em;
-      color: #555;
-      margin-top: 4px;
-      letter-spacing: 2px;
+      margin-top: 10px;
+      font-size: 0.7em; /* days/hours 라벨과 동일 비율 */
     }
 
     @media (max-width: 520px) {
-      .numbers { font-size: 3em; }
+      .numbers, .today-block .today-number { font-size: 3em; }
       .date-text { font-size: 1em; letter-spacing: 3px; }
-      .divider .pct { top: -16px; font-size: 0.65em; }
-      .divider { width: clamp(60px, 20vw, 160px); }
-      .today-label { font-size: 1.2em; }
-    }
-  </style>
-</head>
-<body>
-
-  <div id="timer">
-    <div class="days">
-      <div id="days" class="numbers"></div>days
-    </div>
-    <div class="hours">
-      <div id="hours" class="numbers"></div>hours
-    </div>
-    <div class="minutes">
-      <div id="minutes" class="numbers"></div>minutes
-    </div>
-    <div class="seconds">
-      <div id="seconds" class="numbers"></div>seconds
-    </div>
-  </div>
-
-  <!-- 구분선 -->
-  <div class="date-divider">
-    <span id="start" class="date-text" aria-label="시작 날짜"></span>
-    <div class="divider" id="divider" role="separator" aria-label="목표 진행률">
-      <div class="fill"></div>
-      <div class="thumb"></div>
-      <div class="pct" id="progressPct"></div>
-    </div>
-    <span class="date-text" aria-label="목표 날짜">2030 01 01</span>
-  </div>
-
-  <!-- TODAY 날짜 -->
-  <div class="today-label" id="todayLabel">
-    TODAY
-    <span id="todayDate"></span>
-  </div>
-
-  <script>
-    const startDate = new Date('2025-01-01T00:00:00');
-    const goalDate  = new Date('2030-01-01T00:00:00');
-
-    // 날짜 포맷
-    function pad(n){ return String(n).padStart(2,'0'); }
-    function formatYMD(d){ return `${d.getFullYear()} ${pad(d.getMonth()+1)} ${pad(d.getDate())}`; }
-    function clamp(v,min,max){ return Math.min(Math.max(v,min),max); }
-
-    // 시작일·오늘 날짜 표시
-    document.getElementById('start').textContent = formatYMD(startDate);
-    const todayDateEl = document.getElementById('todayDate');
-
-    // 오늘 날짜 갱신
-    function updateToday(){
-      todayDateEl.textContent = formatYMD(new Date());
-    }
-
-    // 진행률 업데이트
-    const dividerEl = document.getElementById('divider');
-    const pctEl = document.getElementById('progressPct');
-    function updateProgress(now = new Date()) {
-      const total = goalDate - startDate;
-      const elapsed = clamp(now - startDate, 0, total);
-      const p = total > 0 ? (elapsed / total) * 100 : 100;
-      const pFixed = Math.round(p * 10) / 10;
-      dividerEl.style.setProperty('--p', pFixed);
-      pctEl.textContent = `${pFixed}%`;
-    }
-
-    // 카운트다운
-    setInterval(() => {
-      const now = Date.now();
-      const diff = goalDate - now;
-
-      const d = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
-      const h = Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
-      const m = Math.max(0, Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)));
-      const s = Math.max(0, Math.floor((diff % (1000 * 60)) / 1000));
-
-      document.getElementById('days').textContent = d;
-      document.getElementById('hours').textContent = h;
-      document.getElementById('minutes').textContent = m;
-      document.getElementById('seconds').textContent = s;
-
-      updateToday();
-      updateProgress(new Date(now));
-    }, 1000);
-  </script>
-
-</body>
-</html>
