@@ -17,9 +17,9 @@
       body { background: #191919; }
     }
 
-    /* 타이머: 구조 미변경, 가독성 색상 조정 */
+    /* 타이머 스타일 */
     #timer {
-      color: #183059;       /* 라벨도 보이도록 진하게 */
+      color: #183059;
       text-transform: uppercase;
       font-size: 0.7em;
       letter-spacing: 5px;
@@ -39,13 +39,13 @@
       text-align: center;
     }
 
-    /* 날짜 + 구분선 */
+    /* 날짜 + 진행률 구분선 */
     .date-divider {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-      margin: 24px auto;
+      margin: 24px auto 8px;
       width: min(92%, 980px);
     }
     .date-text {
@@ -57,9 +57,9 @@
       white-space: pre;
     }
 
-    /* 진행률 포함 divider */
+    /* 진행률 바 */
     .divider {
-      --p: 0; /* 0~100 */
+      --p: 0;
       position: relative;
       height: 2px;
       width: clamp(80px, 12vw, 200px);
@@ -100,11 +100,28 @@
       pointer-events: none;
     }
 
+    /* 오늘 날짜 표시 */
+    .today-label {
+      margin-top: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.6em;
+      color: #183059;
+      letter-spacing: 3px;
+    }
+    .today-label span {
+      display: block;
+      font-size: 0.5em;
+      color: #555;
+      margin-top: 4px;
+      letter-spacing: 2px;
+    }
+
     @media (max-width: 520px) {
       .numbers { font-size: 3em; }
       .date-text { font-size: 1em; letter-spacing: 3px; }
       .divider .pct { top: -16px; font-size: 0.65em; }
       .divider { width: clamp(60px, 20vw, 160px); }
+      .today-label { font-size: 1.2em; }
     }
   </style>
 </head>
@@ -125,52 +142,57 @@
     </div>
   </div>
 
-  <!-- 왼쪽 오늘 날짜 · 진행률 divider · 오른쪽 목표 날짜 -->
+  <!-- 구분선 -->
   <div class="date-divider">
-    <span id="today" class="date-text" aria-label="오늘 날짜"></span>
+    <span id="start" class="date-text" aria-label="시작 날짜"></span>
     <div class="divider" id="divider" role="separator" aria-label="목표 진행률">
-      <div class="fill" id="progressFill"></div>
-      <div class="thumb" id="progressThumb"></div>
-      <div class="pct" id="progressPct" aria-live="polite"></div>
+      <div class="fill"></div>
+      <div class="thumb"></div>
+      <div class="pct" id="progressPct"></div>
     </div>
     <span class="date-text" aria-label="목표 날짜">2030 01 01</span>
   </div>
 
-  <script>
-    // 안전한 ISO 8601 형식 사용
-    const goalDate  = new Date('2030-01-01T00:00:00'); // 목표일
-    const startDate = new Date('2025-01-01T00:00:00'); // 진행률 기준 시작일
+  <!-- TODAY 날짜 -->
+  <div class="today-label" id="todayLabel">
+    TODAY
+    <span id="todayDate"></span>
+  </div>
 
+  <script>
+    const startDate = new Date('2025-01-01T00:00:00');
+    const goalDate  = new Date('2030-01-01T00:00:00');
+
+    // 날짜 포맷
     function pad(n){ return String(n).padStart(2,'0'); }
     function formatYMD(d){ return `${d.getFullYear()} ${pad(d.getMonth()+1)} ${pad(d.getDate())}`; }
     function clamp(v,min,max){ return Math.min(Math.max(v,min),max); }
 
-    // 오늘 날짜 표시
-    const todayEl = document.getElementById('today');
-    function updateToday() {
-      const today = new Date();
-      todayEl.textContent = formatYMD(today);
+    // 시작일·오늘 날짜 표시
+    document.getElementById('start').textContent = formatYMD(startDate);
+    const todayDateEl = document.getElementById('todayDate');
+
+    // 오늘 날짜 갱신
+    function updateToday(){
+      todayDateEl.textContent = formatYMD(new Date());
     }
 
     // 진행률 업데이트
     const dividerEl = document.getElementById('divider');
     const pctEl = document.getElementById('progressPct');
     function updateProgress(now = new Date()) {
-      const total = goalDate.getTime() - startDate.getTime();
-      const elapsed = clamp(now.getTime() - startDate.getTime(), 0, total);
+      const total = goalDate - startDate;
+      const elapsed = clamp(now - startDate, 0, total);
       const p = total > 0 ? (elapsed / total) * 100 : 100;
       const pFixed = Math.round(p * 10) / 10;
       dividerEl.style.setProperty('--p', pFixed);
       pctEl.textContent = `${pFixed}%`;
-      dividerEl.setAttribute('aria-valuemin','0');
-      dividerEl.setAttribute('aria-valuemax','100');
-      dividerEl.setAttribute('aria-valuenow', String(pFixed));
     }
 
-    // 카운트다운 업데이트
-    const interval = setInterval(() => {
+    // 카운트다운
+    setInterval(() => {
       const now = Date.now();
-      const diff = goalDate.getTime() - now;
+      const diff = goalDate - now;
 
       const d = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
       const h = Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
@@ -182,18 +204,10 @@
       document.getElementById('minutes').textContent = m;
       document.getElementById('seconds').textContent = s;
 
+      updateToday();
       updateProgress(new Date(now));
-      if (diff <= 0) {
-        clearInterval(interval);
-        updateProgress(goalDate);
-      }
     }, 1000);
-
-    // 초기 렌더
-    updateToday();
-    updateProgress();
   </script>
 
-  <noscript>자바스크립트를 활성화하세요.</noscript>
 </body>
 </html>
