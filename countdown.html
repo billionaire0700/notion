@@ -3,109 +3,111 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Montserrat:900">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Montserrat:900&display=swap">
   <title>Countdown</title>
   <style>
     :root { color-scheme: light dark; }
-    body {
-      background: #ffffff;
-      text-align: center;
-      font-family: 'Lato', sans-serif;
-      margin: 0;
-    }
-    @media (prefers-color-scheme: dark) { body { background: #191919; } }
+    body { margin:0; font-family:'Lato',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#fff; text-align:center; }
+    @media (prefers-color-scheme: dark){ body{ background:#191919; } }
 
-    /* #timer 구조는 그대로 */
-    #timer {
-      color: #183059;
-      text-transform: uppercase;
-      font-size: 0.7em;
-      letter-spacing: 5px;
-      margin-top: 24px;
-    }
-    .days, .hours, .minutes, .seconds {
-      display: inline-block;
-      padding: 20px;
-      width: 100px;
-      border-radius: 5px;
-      color: #183059;
-    }
-    .numbers {
-      font-family: 'Montserrat', sans-serif;
-      color: #183059;
-      font-size: 4em;
-      text-align: center;
-      line-height: 1;
-    }
+    #timer{ color:#183059; text-transform:uppercase; font-size:.7em; letter-spacing:5px; margin-top:24px; }
+    .days,.hours,.minutes,.seconds{ display:inline-block; padding:20px; width:100px; border-radius:5px; color:#183059; }
+    .numbers{ font-family:'Montserrat',Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif; color:#183059; font-size:4em; line-height:1; }
 
-    /* 날짜 + 진행률 구분선 */
-    .date-divider {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin: 24px auto 8px;
-      width: min(92%, 980px);
-    }
-    .date-text {
-      font-family: 'Montserrat', sans-serif;
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      color: #183059;
-      font-size: 1.2em;
-      white-space: pre;
-    }
+    .date-divider{ display:flex; align-items:center; justify-content:center; gap:12px; margin:24px auto 8px; width:min(92%,980px); }
+    .date-text{ font-family:'Montserrat',sans-serif; letter-spacing:5px; text-transform:uppercase; color:#183059; font-size:1.2em; white-space:pre; }
 
-    /* 진행률 바 */
-    .divider {
-      --p: 0;
-      position: relative;
-      height: 2px;
-      width: clamp(80px, 12vw, 200px);
-      background: #18305933;
-      flex-shrink: 0;
-      border-radius: 2px;
-    }
-    @media (min-width: 640px) { .divider { width: clamp(120px, 14vw, 260px); } }
-    @media (min-width: 1024px){ .divider { width: clamp(160px, 12vw, 320px); } }
-    @media (min-width: 1440px){ .divider { width: clamp(200px, 10vw, 420px); } }
+    .divider{ --p:0; position:relative; height:2px; width:clamp(80px,12vw,200px); background:#18305933; border-radius:2px; flex-shrink:0; }
+    @media (min-width:640px){ .divider{ width:clamp(120px,14vw,260px);} }
+    @media (min-width:1024px){ .divider{ width:clamp(160px,12vw,320px);} }
+    @media (min-width:1440px){ .divider{ width:clamp(200px,10vw,420px);} }
+    .divider .fill{ position:absolute; inset:0 auto 0 0; width:calc(var(--p)*1%); background:#183059; border-radius:2px; }
+    .divider .thumb{ position:absolute; left:calc(var(--p)*1%); top:50%; transform:translate(-50%,-50%); width:10px; height:10px; border-radius:50%; background:#183059; box-shadow:0 0 0 4px #1830591a; }
+    .divider .pct{ position:absolute; left:calc(var(--p)*1%); top:-18px; transform:translateX(-50%); font-size:.7em; letter-spacing:1px; color:#183059; }
 
-    .divider .fill {
-      position: absolute; inset: 0 auto 0 0;
-      width: calc(var(--p) * 1%); background: #183059; border-radius: 2px;
-    }
-    .divider .thumb {
-      position: absolute; left: calc(var(--p) * 1%); top: 50%;
-      transform: translate(-50%, -50%);
-      width: 10px; height: 10px; border-radius: 50%; background: #183059;
-      box-shadow: 0 0 0 4px #1830591a;
-    }
-    .divider .pct {
-      position: absolute; left: calc(var(--p) * 1%); top: -18px; transform: translateX(-50%);
-      font-size: 0.7em; letter-spacing: 1px; color: #183059;
-    }
+    .today-block{ display:inline-block; padding:12px 20px 0; color:#183059; text-transform:uppercase; letter-spacing:5px; margin-bottom:24px; }
+    .today-number{ font-family:'Montserrat',sans-serif; font-size:4em; line-height:1; color:#183059; }
+    .today-label{ display:block; margin-top:10px; font-size:.7em; }
 
-    /* TODAY 블록: 타이머 블록과 동일 스타일 */
-    .today-block {
-      display: inline-block;
-      padding: 12px 20px 0;
-      color: #183059;
-      text-transform: uppercase;
-      letter-spacing: 5px;
-      margin-bottom: 24px;
+    @media (max-width:520px){
+      .numbers,.today-number{ font-size:3em; }
+      .date-text{ font-size:1em; letter-spacing:3px; }
+      .divider .pct{ top:-16px; font-size:.65em; }
+      .divider{ width:clamp(60px,20vw,160px); }
     }
-    .today-block .today-number {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 4em;
-      line-height: 1;
-      color: #183059;
-    }
-    .today-block .today-label {
-      display: block;
-      margin-top: 10px;
-      font-size: 0.7em; /* days/hours 라벨과 동일 비율 */
+  </style>
+</head>
+<body>
+
+  <div id="timer">
+    <div class="days"><div id="days" class="numbers">0</div>days</div>
+    <div class="hours"><div id="hours" class="numbers">0</div>hours</div>
+    <div class="minutes"><div id="minutes" class="numbers">0</div>minutes</div>
+    <div class="seconds"><div id="seconds" class="numbers">0</div>seconds</div>
+  </div>
+
+  <div class="date-divider">
+    <span id="start" class="date-text" aria-label="시작 날짜">2025 01 01</span>
+    <div class="divider" id="divider" role="separator" aria-label="목표 진행률">
+      <div class="fill"></div><div class="thumb"></div><div class="pct" id="progressPct">0%</div>
+    </div>
+    <span class="date-text" aria-label="목표 날짜">2030 01 01</span>
+  </div>
+
+  <div class="today-block" aria-label="오늘">
+    <div id="todayBig" class="today-number">0000 00 00</div>
+    <span class="today-label">TODAY</span>
+  </div>
+
+  <script>
+    const startDate = new Date('2025-01-01T00:00:00');
+    const goalDate  = new Date('2030-01-01T00:00:00');
+
+    const el = {
+      d: document.getElementById('days'),
+      h: document.getElementById('hours'),
+      m: document.getElementById('minutes'),
+      s: document.getElementById('seconds'),
+      todayBig: document.getElementById('todayBig'),
+      pct: document.getElementById('progressPct'),
+      divider: document.getElementById('divider')
+    };
+
+    const pad = n => String(n).padStart(2,'0');
+    const fmt = d => `${d.getFullYear()} ${pad(d.getMonth()+1)} ${pad(d.getDate())}`;
+    const clamp = (v,min,max) => Math.min(Math.max(v,min),max);
+
+    function renderToday() { el.todayBig.textContent = fmt(new Date()); }
+
+    function renderProgress(now = new Date()){
+      const total = goalDate - startDate;
+      const elapsed = clamp(now - startDate, 0, total);
+      const p = total > 0 ? (elapsed / total) * 100 : 100;
+      const p1 = Math.round(p*10)/10;
+      el.divider.style.setProperty('--p', p1);
+      el.pct.textContent = `${p1}%`;
+      el.divider.setAttribute('aria-valuenow', String(p1));
     }
 
-    @media (max-width: 520px) {
-      .numbers, .today-block .today-number { font-size: 3em; }
-      .date-text { font-size: 1em; letter-spacing: 3px; }
+    function renderCountdown(){
+      const now = Date.now();
+      const diff = goalDate - now;
+      const days = Math.max(0, Math.floor(diff / 86400000));
+      const hours = Math.max(0, Math.floor((diff % 86400000) / 3600000));
+      const minutes = Math.max(0, Math.floor((diff % 3600000) / 60000));
+      const seconds = Math.max(0, Math.floor((diff % 60000) / 1000));
+      el.d.textContent = days; el.h.textContent = hours; el.m.textContent = minutes; el.s.textContent = seconds;
+      renderProgress(new Date(now));
+    }
+
+    // 초기 1회 즉시 렌더
+    document.getElementById('start').textContent = fmt(startDate);
+    renderToday(); renderCountdown();
+
+    // 이후 1초마다 업데이트
+    setInterval(() => { renderToday(); renderCountdown(); }, 1000);
+  </script>
+
+  <noscript>자바스크립트를 켜야 내용이 보인다.</noscript>
+</body>
+</html>
