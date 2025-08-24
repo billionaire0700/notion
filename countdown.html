@@ -14,7 +14,7 @@
       margin: 0;
     }
 
-    /* 타이머 영역: 수정 금지 지시 준수. 시각 스타일만 유지 */
+    /* 타이머: 구조 미변경 */
     #timer {
       color: #eeeeee;
       text-transform: uppercase;
@@ -36,19 +36,14 @@
       text-align: center;
     }
 
-    /* 구분선 + 날짜 레이아웃 */
+    /* 날짜 + 구분선 */
     .date-divider {
       display: flex;
       align-items: center;
-      gap: 16px;
-      width: min(860px, 90%);
+      justify-content: center;
+      gap: 12px;
       margin: 24px auto;
-    }
-    .divider {
-      flex: 1 1 auto;
-      height: 1px;
-      background-color: #183059;
-      margin: 0; /* 기존 중앙정렬 마진 제거 */
+      width: min(92%, 980px);
     }
     .date-text {
       font-family: 'Montserrat', sans-serif;
@@ -56,12 +51,57 @@
       text-transform: uppercase;
       color: #183059;
       font-size: 1.2em;
-      white-space: pre; /* 공간 유지 */
+      white-space: pre;
+    }
+
+    /* 진행률 표시가 포함된 divider */
+    .divider {
+      --p: 0; /* 0~100 */
+      position: relative;
+      height: 2px;
+      width: clamp(80px, 12vw, 200px); /* 기본 반응형 */
+      background: #18305933;
+      flex-shrink: 0;
+      border-radius: 2px;
+    }
+    /* 더 세밀한 반응형 단계 */
+    @media (min-width: 640px) { .divider { width: clamp(120px, 14vw, 260px); } }
+    @media (min-width: 1024px){ .divider { width: clamp(160px, 12vw, 320px); } }
+    @media (min-width: 1440px){ .divider { width: clamp(200px, 10vw, 420px); } }
+
+    .divider .fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: calc(var(--p) * 1%);
+      background: #183059;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    .divider .thumb {
+      position: absolute;
+      left: calc(var(--p) * 1%);
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #183059;
+      box-shadow: 0 0 0 4px #1830591a;
+      pointer-events: none;
+    }
+    .divider .pct {
+      position: absolute;
+      left: calc(var(--p) * 1%);
+      top: -18px;
+      transform: translateX(-50%);
+      font-size: 0.7em;
+      letter-spacing: 1px;
+      color: #183059;
+      pointer-events: none;
     }
 
     @media (max-width: 520px) {
       .numbers { font-size: 3em; }
       .date-text { font-size: 1em; letter-spacing: 3px; }
+      .divider .pct { top: -16px; font-size: 0.65em; }
     }
   </style>
 </head>
@@ -82,39 +122,7 @@
     </div>
   </div>
 
-  <!-- 구분선: 왼쪽 현재 날짜, 오른쪽 고정 목표 날짜 -->
+  <!-- 왼쪽 오늘 날짜 · 진행률 divider · 오른쪽 목표 날짜 -->
   <div class="date-divider">
     <span id="today" class="date-text" aria-label="오늘 날짜"></span>
-    <div class="divider" role="separator" aria-hidden="true"></div>
-    <span class="date-text" aria-label="목표 날짜">2030 01 01</span>
-  </div>
-
-  <script>
-    const myDate = new Date('Dec 31, 2029 00:00:00');
-
-    // 오늘 날짜 계산 및 표시
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    document.getElementById('today').textContent = `${yyyy} ${mm} ${dd}`;
-
-    // countdown
-    setInterval(function () {
-      const now = new Date().getTime();
-      const diff = myDate - now;
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      document.getElementById('days').textContent = days;
-      document.getElementById('hours').textContent = hours;
-      document.getElementById('minutes').textContent = minutes;
-      document.getElementById('seconds').textContent = seconds;
-    }, 1000);
-  </script>
-
-</body>
-</html>
+    <div class="divider" id="div
